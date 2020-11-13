@@ -1,0 +1,15 @@
+{
+    "python.pythonPath": ".venv\\Scripts\\python.exe",
+    "cSpell.words": [
+        "NOQA",
+        "ROOTT",
+        "Ttree",
+        "aiostream",
+        "coffea",
+        "funcx",
+        "minio",
+        "qastle",
+        "servicex",
+        "xaod"
+    ]
+}
