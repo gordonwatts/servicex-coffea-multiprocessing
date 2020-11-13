@@ -6,6 +6,7 @@
         "Ttree",
         "aiostream",
         "coffea",
+        "dask",
         "funcx",
         "minio",
         "qastle",

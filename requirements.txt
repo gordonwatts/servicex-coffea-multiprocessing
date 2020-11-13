@@ -9,6 +9,7 @@ servicex_clients
 coffea
 jupyterlab
 funcx
+dask[distributed]
 
 # Some helper libraries
 aiostream
