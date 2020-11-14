@@ -3,8 +3,9 @@ import uproot4
 import aiostream
 import ray
 
+
 async def _coffea_sx_to_ray(minio_stream, coffea_processor,
-                             accumulator):
+                            accumulator):
     '''Given the minio stream, the processor function, and the accumulator - run everything on funcx.
     Return a copy what the processor returns.
 
@@ -53,7 +54,7 @@ async def _coffea_sx_to_ray(minio_stream, coffea_processor,
 
 
 async def process_coffea_ray(minio_stream, coffea_processor: Callable[[str, str, Any], None],
-                              accumulator):
+                             accumulator):
     '''Return the accumulated accumulator, one at a time, as a stream.
 
     Arguments:
@@ -63,7 +64,7 @@ async def process_coffea_ray(minio_stream, coffea_processor: Callable[[str, str,
     '''
     # Get the stream of processes async identity results
     func_results = _coffea_sx_to_ray(minio_stream, coffea_processor,
-                                      accumulator)
+                                     accumulator)
 
     # Wait for all the data to show up
     async def inline_wait(r):
