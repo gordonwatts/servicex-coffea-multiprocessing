@@ -55,9 +55,6 @@ async def process_coffea_dask(minio_stream, coffea_processor: Callable[[str, str
                               accumulator, dask_client):
     '''Return the accumulated accumulator, one at a time, as a stream.
 
-    WARNING: First time this is called in a session it will produce a URL and you'll need to
-    put a token in. After that, in a session, it should just work silently.
-
     Arguments:
 
     Notes:
