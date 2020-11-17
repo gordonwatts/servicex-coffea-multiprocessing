@@ -1,10 +1,13 @@
 from typing import Any, Callable
 import uproot4
 import aiostream
+from coffea.processor.processor import ProcessorABC
+
+from .coffea_processing import run_coffea_processor, stream_coffea_results
 
 
-async def _coffea_sx_to_dask(minio_stream, coffea_processor,
-                             accumulator, dask_client):
+async def _coffea_sx_to_dask(minio_stream, coffea_processor: ProcessorABC,
+                             dask_client):
     '''Given the minio stream, the processor function, and the accumulator - run everything on funcx.
     Return a copy what the processor returns.
 
@@ -43,16 +46,16 @@ async def _coffea_sx_to_dask(minio_stream, coffea_processor,
         # NOTE: If we knew the tree name ahead of time, this pattern would
         # be much simpler.
         # TODO: Fix this.
-        data_result = dask_client.submit(coffea_processor, events_url=file_url,
+        data_result = dask_client.submit(run_coffea_processor, events_url=file_url,
                                          tree_name=tree_name,
-                                         accumulator=accumulator)
+                                         proc=coffea_processor)
 
         # Pass this down to the next item in the stream.
         yield data_result
 
 
-async def process_coffea_dask(minio_stream, coffea_processor: Callable[[str, str, Any], None],
-                              accumulator, dask_client):
+async def process_coffea_dask(minio_stream, coffea_processor: ProcessorABC,
+                              dask_client):
     '''Return the accumulated accumulator, one at a time, as a stream.
 
     Arguments:
@@ -60,23 +63,10 @@ async def process_coffea_dask(minio_stream, coffea_processor: Callable[[str, str
     Notes:
 
     '''
-    # Get the stream of processes async identity results
     func_results = _coffea_sx_to_dask(minio_stream, coffea_processor,
-                                      accumulator, dask_client)
+                                      dask_client)
 
-    # Wait for all the data to show up
-    async def inline_wait(r):
-        'This could be inline, but python 3.6'
-        return await r
+    results = stream_coffea_results(func_results, coffea_processor)
 
-    finished_events = aiostream.stream.map(func_results,
-                                           inline_wait,
-                                           ordered=False)
-
-    # Finall, accumulate!
-    # There is an accumulate pattern in the aiostream lib
-    output = accumulator.identity()
-    async with finished_events.stream() as streamer:
-        async for results in streamer:
-            output.add(results)
-            yield output
+    async for r in results:
+        yield r

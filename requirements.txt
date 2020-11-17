@@ -8,7 +8,8 @@ numpy==1.19.3
 servicex_clients
 coffea
 jupyterlab
-funcx
+git+https://github.com/funcx-faas/funcX.git@async_interface#subdirectory=funcx_sdk
+
 dask[distributed]
 
 # Some helper libraries
