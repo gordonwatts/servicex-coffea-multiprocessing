@@ -1,3 +1,4 @@
+from os import execl
 from tenacity import retry, retry_if_exception, retry_if_exception_type, wait_fixed, wait_random
 from funcx.sdk.utils.throttling import MaxRequestsExceeded
 
@@ -19,14 +20,20 @@ async def funcx_run_function_async(fxc, function_id: str, endpoint_id: str, *arg
         Whatever the funcx guy returns.
     '''
     # Helper methods - lazy, so take advantage of lambda capture.
+    # TODO: If something goes wrong with funcx, this can turn into an infinite loop.
     @retry(wait=wait_fixed(3), retry=retry_if_exception_type(MaxRequestsExceeded))
     async def _submit_task():
-        return fxc.run(function_id=function_id, endpoint_id=endpoint_id, *args, **kwargs)
+        try:
+            return fxc.run(function_id=function_id, endpoint_id=endpoint_id, *args, **kwargs)
+        finally:
+            print("submitted!")
 
     def _known_exception(e):
         'Return true if the exception is ok'
+        print(f'Failed: {str(e)}')
         return str(e) in ['waiting-for-ep', 'running', 'waiting-for-launch', 'waiting-for-nodes']
 
+    # TODO: If something goes wrong with funcx, this can turn into an infinite loop.
     @retry(retry=retry_if_exception_type(MaxRequestsExceeded) | retry_if_exception(_known_exception),
            wait=wait_fixed(3) + wait_random(0, 2))
     async def _fetch_results():

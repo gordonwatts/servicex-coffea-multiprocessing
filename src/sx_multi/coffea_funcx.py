@@ -2,7 +2,7 @@ import uproot4
 from coffea.processor.processor import ProcessorABC
 from funcx.sdk.client import FuncXClient
 
-from .coffea_processing import stream_coffea_results
+from .coffea_processing import run_coffea_processor, stream_coffea_results
 from .funcx_util import funcx_run_function_async
 
 
@@ -29,7 +29,7 @@ async def _get_coffea_acc_from_sx(minio_stream, coffea_processor: ProcessorABC,
         processor!
     '''
     # Register the function with funcx
-    funcx_uuid = fxc.register_function(coffea_processor)
+    funcx_uuid = fxc.register_function(run_coffea_processor)
 
     # Loop over all incoming minio items
     tree_name = None
