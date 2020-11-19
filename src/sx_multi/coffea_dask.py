@@ -1,6 +1,4 @@
-from typing import Any, Callable
 import uproot4
-import aiostream
 from coffea.processor.processor import ProcessorABC
 
 from .coffea_processing import run_coffea_processor, stream_coffea_results
