@@ -1,24 +1,20 @@
-from typing import Any, Callable
 import uproot4
-import aiostream
+from coffea.processor.processor import ProcessorABC
 from funcx.sdk.client import FuncXClient
+
+from .coffea_processing import stream_coffea_results
 from .funcx_util import funcx_run_function_async
 
 
-async def _get_coffea_acc_from_sx(minio_stream, coffea_processor,
-                                  accumulator, fxc: FuncXClient,
-                                  funcx_endpoint_id: str):
+async def _get_coffea_acc_from_sx(minio_stream, coffea_processor: ProcessorABC,
+                                  fxc: FuncXClient, funcx_endpoint_id: str):
     '''Given the minio stream, the processor function, and the accumulator - run everything on funcx.
     Return a copy what the processor returns.
 
     Arguments:
         minio_stream:  The stream of info from servicex that contains the minio url for
                     the ROOT files that are output from servicex.
-        coffea_processor: Function pointer to the coffea processor that is self-contained
-                        enough to run in the funcx environment. This must conform to the
-                        api used for the `processor` in this notebook.
-        accumulator:  The accumulator that we can use to store the histograms, etc., that
-                    that we want to build.
+        coffea_processor: The `coffea` processor.
         fcx:          The funcx client object we are using to connect
         funcx_endpoint_id The uuid of the end point for funcx
 
@@ -53,14 +49,13 @@ async def _get_coffea_acc_from_sx(minio_stream, coffea_processor,
                                                funcx_endpoint_id,
                                                events_url=file_url,
                                                tree_name=tree_name,
-                                               accumulator=accumulator)
+                                               proc=coffea_processor)
 
         # Pass this down to the next item in the stream.
         yield data_result
 
 
-async def process_coffea_funcx(minio_stream, coffea_processor: Callable[[str, str, Any], None],
-                               accumulator):
+async def process_coffea_funcx(minio_stream, coffea_processor: ProcessorABC):
     '''Return the accumulated accumulator, one at a time, as a stream.
 
     WARNING: First time this is called in a session it will produce a URL and you'll need to
@@ -77,20 +72,14 @@ async def process_coffea_funcx(minio_stream, coffea_processor: Callable[[str, st
 
     # Get the stream of processes async identity results
     func_results = _get_coffea_acc_from_sx(minio_stream, coffea_processor,
-                                           accumulator, fxc, coffea_endpoint)
+                                           fxc, coffea_endpoint)
 
     # Wait for all the data to show up
     async def inline_wait(r):
         'This could be inline, but python 3.6'
         return await r
 
-    finished_events = aiostream.stream.map(func_results,
-                                           inline_wait,
-                                           ordered=False)
+    results = stream_coffea_results(func_results, coffea_processor)
 
-    # Finall, accumulate!
-    output = accumulator.identity()
-    async with finished_events.stream() as streamer:
-        async for results in streamer:
-            output.add(results)
-            yield output
+    async for r in results:
+        yield r
