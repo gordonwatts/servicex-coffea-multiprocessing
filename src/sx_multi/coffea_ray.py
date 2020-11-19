@@ -1,11 +1,12 @@
-from typing import Any, Callable
-import uproot4
-import aiostream
 import ray
+import uproot4
+from coffea.processor.processor import ProcessorABC
+
+from sx_multi.coffea_processing import (run_coffea_processor,
+                                        stream_coffea_results)
 
 
-async def _coffea_sx_to_ray(minio_stream, coffea_processor,
-                            accumulator):
+async def _coffea_sx_to_ray(minio_stream, coffea_processor: ProcessorABC):
     '''Given the minio stream, the processor function, and the accumulator - run everything on funcx.
     Return a copy what the processor returns.
 
@@ -15,9 +16,6 @@ async def _coffea_sx_to_ray(minio_stream, coffea_processor,
         coffea_processor: Function pointer to the coffea processor that is self-contained
                         enough to run in the funcx environment. This must conform to the
                         api used for the `processor` in this notebook.
-        accumulator:  The accumulator that we can use to store the histograms, etc., that
-                    that we want to build.
-        dask_client: dask client
 
     Returns:
         Sequence of the accumulator object, as each jobs fills. Note that this
@@ -31,7 +29,7 @@ async def _coffea_sx_to_ray(minio_stream, coffea_processor,
     '''
     # Loop over all incoming minio items
     tree_name = None
-    r_func = ray.remote(coffea_processor)
+    r_func = ray.remote(run_coffea_processor)
     async for sx_data in minio_stream:
         file_url = sx_data['url']
 
@@ -47,14 +45,13 @@ async def _coffea_sx_to_ray(minio_stream, coffea_processor,
         # TODO: Fix this.
         data_result = r_func.remote(events_url=file_url,
                                     tree_name=tree_name,
-                                    accumulator=accumulator)
+                                    proc=coffea_processor)
 
         # Pass this down to the next item in the stream.
         yield data_result
 
 
-async def process_coffea_ray(minio_stream, coffea_processor: Callable[[str, str, Any], None],
-                             accumulator):
+async def process_coffea_ray(minio_stream, coffea_processor: ProcessorABC):
     '''Return the accumulated accumulator, one at a time, as a stream.
 
     Arguments:
@@ -63,22 +60,9 @@ async def process_coffea_ray(minio_stream, coffea_processor: Callable[[str, str,
 
     '''
     # Get the stream of processes async identity results
-    func_results = _coffea_sx_to_ray(minio_stream, coffea_processor,
-                                     accumulator)
+    func_results = _coffea_sx_to_ray(minio_stream, coffea_processor)
 
-    # Wait for all the data to show up
-    async def inline_wait(r):
-        'This could be inline, but python 3.6'
-        return await r
+    results = stream_coffea_results(func_results, coffea_processor)
 
-    finished_events = aiostream.stream.map(func_results,
-                                           inline_wait,
-                                           ordered=False)
-
-    # Finall, accumulate!
-    # There is an accumulate pattern in the aiostream lib
-    output = accumulator.identity()
-    async with finished_events.stream() as streamer:
-        async for results in streamer:
-            output.add(results)
-            yield output
+    async for r in results:
+        yield r
