@@ -10,7 +10,7 @@ The library can be installed from this Git repository with all its dependencies 
 python -m pip install .
 ```
 
-If you are developing the library it is recommended to install in `editable` mode and with the 'complete' extra
+If you are developing the library, want to use it directly in jupyter, etc., it is recommended to install in `editable` mode and with the 'complete' extra
 
 ```
 python -m pip install -e .[complete]
