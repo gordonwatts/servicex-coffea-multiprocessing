@@ -1,22 +1,22 @@
+import inspect
+
 import aiostream
 from coffea.processor.processor import ProcessorABC
 
 
-def run_coffea_processor(events_url, tree_name, proc):
+def run_coffea_processor(events_url, tree_name, accumulator,  proc):
     '''Process a single file from a tree via a coffea processor
     on the remote node.
 
     Arguments:
       events_url: a URL to a ROOT file that uproot4 can open
       tree_name: The tree in the ROOT file to use for our data
-      proc: Coffea processor
+      proc: function
     '''
     # Since we execute remotely, explicitly include everything we need.
     import awkward1 as ak
     from coffea.nanoevents import NanoEventsFactory, BaseSchema
-    from coffea.processor.processor import ProcessorABC
 
-    assert isinstance(proc, ProcessorABC)
 
     # This in is amazingly important - the invar mass will fail silently without it.
     # And must be done in here as this function is shipped off to the funcx processor
@@ -36,7 +36,7 @@ def run_coffea_processor(events_url, tree_name, proc):
     ).events()
 
     # Next, do the work
-    return proc.process(events)
+    return proc(accumulator, events)
 
 
 async def stream_coffea_results(results_stream, coffea_processor: ProcessorABC):
