@@ -9,6 +9,7 @@
         "dask",
         "funcx",
         "minio",
+        "nanoevents",
         "qastle",
         "servicex",
         "xaod"
