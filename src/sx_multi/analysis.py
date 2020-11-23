@@ -25,43 +25,31 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from functools import wraps
-from typing import Callable
+from abc import ABC, abstractmethod
+
+from coffea.nanoaod import NanoEvents
+from coffea.processor.accumulator import dict_accumulator
 
 
-def analysis(fn):
-    """Mark a web route as requiring OAuth sign-in."""
-
-    @wraps(fn)
-    def decorated_function(events_url, tree_name, accumulator, *args, **kwargs):
-        import awkward1 as ak
-        from coffea.nanoevents import NanoEventsFactory
-        from coffea.nanoevents import BaseSchema
-
-        # This in is amazingly important - the invar mass will fail silently without it.
-        # And must be done in here as this function is shipped off to the funcx processor
-        # on a remote machine/remote python environment.
-        from coffea.nanoevents.methods import candidate
-        ak.behavior.update(candidate.behavior)
-
-        # Use NanoEvents to build a 4-vector
-        events = NanoEventsFactory.from_file(
-            file=str(events_url),
-            treepath=f'/{tree_name}',
-            schemaclass=BaseSchema,
-            metadata={
-                'dataset': 'mc15x',
-                'filename': str(events_url)
-            }
-        ).events()
-
-        print("Events ", events)
-        return fn(events=events, events_url=events_url, tree_name=tree_name,
-                  accumulator=accumulator, *args, **kwargs)
-
-    return decorated_function
-
-
-class Analysis:
+class Analysis(ABC):
     def __init__(self):
-        pass
+        """
+        Concrete subclasses of this should construct the accumulator
+        """
+        self.accumulator = None
+
+    @staticmethod
+    @abstractmethod
+    def process(output: dict_accumulator,
+                events: NanoEvents) -> dict_accumulator:
+        """
+        Implement this abstract method to perform the actual analysis operations. The
+        executor will wrap this in code to construct a NanoEvents instance and will pass
+        in the analysis instance's accumulator.
+        :param output: dict_accumulator
+            An empty accumulator ready to pile data into
+        :param events: NanoEvents
+        :return: dict_accumulator
+            Filled with the results from this analysis
+        """
+        raise NotImplemented

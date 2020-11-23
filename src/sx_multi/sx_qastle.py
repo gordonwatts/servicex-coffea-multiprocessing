@@ -13,7 +13,7 @@ from servicex import ServiceXDataset
 # As a result, it also have more limitations.
 
 
-class FuncAdlQastle(EventDataset):
+class FuncAdlDataset(EventDataset):
     'func_adl data source that will return `qastle` string for the query, providing low level access.'
     def __init__(self):
         super().__init__()

@@ -25,16 +25,13 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import uproot4
-from sx_multi.executor import Executor, run_coffea_processor
+from funcx import FuncXClient
+from sx_multi import run_coffea_processor
 
-
-class LocalExecutor(Executor):
-    def __init__(self):
-        pass
-
-    def run_async_analysis(self, file_url, tree_name, accumulator, process_func):
-        return run_coffea_processor(events_url=file_url,
-                                    tree_name=tree_name,
-                                    accumulator=accumulator,
-                                    proc=process_func)
+fxc = FuncXClient()
+container_id = fxc.register_container("bengal1/funcx_coffea:object_model", "docker", "Coffea Processor")
+function_id = fxc.register_function(
+    run_coffea_processor,
+    "Run your coffea process code in a setup environment",
+    container_uuid=container_id)
+print("Function_ID is ", function_id)

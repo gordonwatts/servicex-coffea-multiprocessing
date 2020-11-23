@@ -38,4 +38,3 @@ class DataSource:
         for dataset in self.datasets:
             async for file in dataset.get_data_rootfiles_minio_async(self.query.value()):
                 yield file
-

@@ -32,83 +32,45 @@ import uproot4
 from funcx import FuncXClient
 import dill as pickle
 
-import functools
-
+from sx_multi.executor import Executor, run_coffea_processor
 from tenacity import retry, wait_fixed
 
-def run_coffea_processor(events_url, tree_name, accumulator,  proc):
-    '''Process a single file from a tree via a coffea processor
-    on the remote node.
 
-    Arguments:
-      events_url: a URL to a ROOT file that uproot4 can open
-      tree_name: The tree in the ROOT file to use for our data
-      proc: function
-    '''
-    # Since we execute remotely, explicitly include everything we need.
-    import awkward1 as ak
-    from coffea.nanoevents import NanoEventsFactory, BaseSchema
-    import dill as pickle
-
-
-    # This in is amazingly important - the invar mass will fail silently without it.
-    # And must be done in here as this function is shipped off to the funcx processor
-    # on a remote machine/remote python environment.
-    from coffea.nanoevents.methods import candidate
-    ak.behavior.update(candidate.behavior)
-
-    # Use NanoEvents to build a 4-vector
-    events = NanoEventsFactory.from_file(
-        file=str(events_url),
-        treepath=f'/{tree_name}',
-        schemaclass=BaseSchema,
-        metadata={
-            'dataset': 'mc15x',
-            'filename': str(events_url)
-        }
-    ).events()
-
-
-    f = pickle.loads(proc)
-    # Next, do the work
-    return f(accumulator, events)
-
-
-
-class FuncXExecutor:
-    def __init__(self, endpoint_id):
+class FuncXExecutor(Executor):
+    def __init__(self, endpoint_id, process_function="10627493-4bdd-4690-b37e-0f6935aebe1b"):
         self.fxc = FuncXClient(asynchronous=True)
         self.endpoint_id = endpoint_id
+        self.process_function = process_function
         print(self.fxc)
 
     async def execute(self, analysis, datasource):
-        g = pickle.dumps(analysis.process)
 
-        function_id = self.fxc.register_function(run_coffea_processor)
+        # Open a stream of event file URLs
         result_file_stream = datasource.stream_result_file_urls()
 
-        func_results = self.launch_analysis(result_file_stream, function_id, analysis.accumulator, g)
+        # Open a stream of histograms from the analysis code
+        func_results = self.launch_analysis(result_file_stream, analysis)
 
-        # Wait for all the data to show up
+        # Little worker function to wait on each analysis to complete
         async def inline_wait(r):
             'This could be inline, but python 3.6'
             x = await r
             return x
 
+        # Use an unordered map to return completed analysis tasks as they resolve
         finished_events = aiostream.stream.map(func_results,
                                                inline_wait,
                                                ordered=False)
-        # Finally, accumulate!
-        # There is an accumulate pattern in the aiostream lib
-        output = analysis.accumulator.identity()
-        async with finished_events.stream() as streamer:
-            async for results in streamer:
-                print(results)
-                output.add(results)
-                yield output
 
-    async def launch_analysis(self, result_file_stream, function_id, accumulator, process):
+        async for hist in self.accumulate(analysis, finished_events):
+            yield hist
+
+    async def launch_analysis(self, result_file_stream, analysis):
         tree_name = None
+        function_id = self.fxc.register_function(run_coffea_processor)
+        # function_id = self.process_function
+        pickled_process_func = pickle.dumps(analysis.process)
+
         async for sx_data in result_file_stream:
             file_url = sx_data['url']
 
@@ -122,7 +84,11 @@ class FuncXExecutor:
             # NOTE: If we knew the tree name ahead of time, this pattern would
             # be much simpler.
             # TODO: Fix this.
-            data_result = self.safe_run(file_url, tree_name, accumulator, process, function_id)
+            data_result = self.safe_run(file_url, tree_name,
+                                        analysis.accumulator,
+                                        pickled_process_func,
+                                        explicit_func_pickle=True,
+                                        function_id=function_id)
             # Pass this down to the next item in the stream.
             yield data_result
 

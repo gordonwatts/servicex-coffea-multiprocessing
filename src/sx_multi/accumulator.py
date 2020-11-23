@@ -25,16 +25,17 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import uproot4
-from sx_multi.executor import Executor, run_coffea_processor
+import copy
+from typing import Dict, Any
+
+from coffea.processor.accumulator import dict_accumulator, defaultdict_accumulator
 
 
-class LocalExecutor(Executor):
-    def __init__(self):
-        pass
-
-    def run_async_analysis(self, file_url, tree_name, accumulator, process_func):
-        return run_coffea_processor(events_url=file_url,
-                                    tree_name=tree_name,
-                                    accumulator=accumulator,
-                                    proc=process_func)
+class Accumulator(dict_accumulator):
+    """
+    Simplified interface to Coffea accumulator. Sets up the most basic form automatically
+    """
+    def __init__(self, cats: Dict[str, Any]):
+        full_cats = copy.copy(cats)
+        full_cats["sumw"] = defaultdict_accumulator(float)
+        super().__init__(full_cats)

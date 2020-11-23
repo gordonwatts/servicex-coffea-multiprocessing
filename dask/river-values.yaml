@@ -1,0 +1,16 @@
+worker:
+  env:  # Environment variables. See `values.yaml` for example values.
+  #  - name: EXTRA_APT_PACKAGES
+  #    value: build-essential openssl
+  #  - name: EXTRA_CONDA_PACKAGES
+  #    value: numba xarray -c conda-forge
+    - name: EXTRA_PIP_PACKAGES
+      value: dill coffea git+https://github.com/scikit-hep/uproot4.git git+https://github.com/gordonwatts/servicex-coffea-multiprocessing.git@object_model --upgrade
+
+  image:
+    repository: bengal1/dask
+    tag: 3.7
+
+jupyter:
+  enabled: false
+  rbac: false

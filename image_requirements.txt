@@ -1,0 +1,2 @@
+coffea
+git+https://github.com/scikit-hep/uproot4.git
