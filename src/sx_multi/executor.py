@@ -30,19 +30,17 @@ from typing import Callable, AsyncGenerator
 
 import aiostream
 import uproot4
-from coffea.nanoaod import NanoEvents
 from sx_multi.accumulator import Accumulator
 from sx_multi.analysis import Analysis
-from sx_multi.data_source import DataSource
 
 
 class Executor(ABC):
 
     @abstractmethod
     def run_async_analysis(self, file_url: str, tree_name: str, accumulator: Accumulator, process_func: Callable):
-        raise NotImplemented
+        raise NotImplementedError
 
-    async def execute(self, analysis: Analysis, datasource: DataSource) -> AsyncGenerator[Accumulator, None]:
+    async def execute(self, analysis, datasource):
         """
         Launch an analysis against the given dataset on the implementation's task framework
         :param analysis:
@@ -129,9 +127,9 @@ class Executor(ABC):
 
 
 def run_coffea_processor(events_url: str, tree_name: str,
-                         accumulator: Accumulator,
-                         proc: Callable[[Accumulator, NanoEvents],Accumulator],
-                         explicit_func_pickle: bool = False) -> Accumulator:
+                         accumulator,
+                         proc,
+                         explicit_func_pickle=False):
     """
     Process a single file from a tree via a coffea processor on the remote node
     :param events_url:

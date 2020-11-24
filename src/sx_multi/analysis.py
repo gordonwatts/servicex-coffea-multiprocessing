@@ -52,4 +52,4 @@ class Analysis(ABC):
         :return: dict_accumulator
             Filled with the results from this analysis
         """
-        raise NotImplemented
+        raise NotImplementedError

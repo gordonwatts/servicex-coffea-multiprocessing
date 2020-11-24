@@ -9,5 +9,9 @@ extras_require["develop"] = sorted(
 extras_require["complete"] = sorted(set(sum(extras_require.values(), [])))
 
 setup(
-    extras_require=extras_require,
+    name="sx_multi",
+    version="0.0.1",
+    packages=['sx_multi'],
+    scripts=[],
+    extras_require=extras_require
 )

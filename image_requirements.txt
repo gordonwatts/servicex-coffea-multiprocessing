@@ -1,2 +1,8 @@
 coffea
 git+https://github.com/scikit-hep/uproot4.git
+# Need some special fixed clients for this test
+servicex==2.2a2
+aiostream
+tenacity
+func-adl-servicex==1.0.2
+dask[distributed]

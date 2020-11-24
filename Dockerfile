@@ -6,6 +6,6 @@ RUN pip install -r requirements.txt && pip install funcx-endpoint
 COPY setup.py /opt/sx_multi/
 COPY src /opt/sx_multi/
 WORKDIR /opt/sx_multi
-RUN python setup.py install
+RUN /usr/local/bin/python -m pip install .
 
 
