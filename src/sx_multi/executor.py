@@ -148,7 +148,9 @@ def run_coffea_processor(events_url: str, tree_name: str,
     """
     # Since we execute remotely, explicitly include everything we need.
     import awkward1 as ak
-    from coffea.nanoevents import NanoEventsFactory, BaseSchema
+    from coffea.nanoevents import NanoEventsFactory
+    from sx_multi.schema import auto_schema
+
 
     # This in is amazingly important - the invar mass will fail silently without it.
     # And must be done in here as this function is shipped off to the funcx processor
@@ -160,7 +162,7 @@ def run_coffea_processor(events_url: str, tree_name: str,
     events = NanoEventsFactory.from_file(
         file=str(events_url),
         treepath=f'/{tree_name}',
-        schemaclass=BaseSchema,
+        schemaclass=auto_schema,
         metadata={
             'dataset': 'mc15x',
             'filename': str(events_url)
