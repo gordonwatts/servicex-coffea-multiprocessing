@@ -33,7 +33,13 @@ class LocalExecutor(Executor):
         pass
 
     def run_async_analysis(self, file_url, tree_name, accumulator, process_func):
-        return run_coffea_processor(events_url=file_url,
+        return self._async_analysis(events_url=file_url,
+                                    tree_name=tree_name,
+                                    accumulator=accumulator,
+                                    process_func=process_func)
+
+    async def _async_analysis(self, events_url, tree_name, accumulator, process_func):
+        return run_coffea_processor(events_url=events_url,
                                     tree_name=tree_name,
                                     accumulator=accumulator,
                                     proc=process_func)
