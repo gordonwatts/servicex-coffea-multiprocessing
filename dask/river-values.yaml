@@ -5,7 +5,7 @@ worker:
   #  - name: EXTRA_CONDA_PACKAGES
   #    value: numba xarray -c conda-forge
     - name: EXTRA_PIP_PACKAGES
-      value: dill coffea git+https://github.com/scikit-hep/uproot4.git git+https://github.com/gordonwatts/servicex-coffea-multiprocessing.git@object_model --upgrade
+      value: dill coffea git+https://github.com/scikit-hep/uproot4.git git+https://github.com/gordonwatts/servicex-coffea-multiprocessing.git@add_schema_to_notebooks  --upgrade
 
   image:
     repository: bengal1/dask
