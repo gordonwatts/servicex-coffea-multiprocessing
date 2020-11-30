@@ -35,7 +35,7 @@ from tenacity import retry, wait_fixed, retry_if_exception_type
 
 
 class FuncXExecutor(Executor):
-    def __init__(self, endpoint_id, process_function="fe33e168-ef17-452b-ba39-eab7a7e73f0c"):
+    def __init__(self, endpoint_id, process_function="301f653b-40b6-449e-ad2e-e57d3aaa33cd"):
         self.fxc = FuncXClient(asynchronous=True)
         self.endpoint_id = endpoint_id
         self.process_function = process_function

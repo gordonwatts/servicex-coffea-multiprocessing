@@ -29,7 +29,7 @@ from funcx import FuncXClient
 from sx_multi import run_coffea_processor
 
 fxc = FuncXClient()
-container_id = fxc.register_container("bengal1/funcx_coffea:object_model.0.5", "docker", "Coffea Processor")
+container_id = fxc.register_container("bengal1/funcx_coffea:add_schema_to_notebooks", "docker", "Coffea Processor")
 function_id = fxc.register_function(
     run_coffea_processor,
     "Run your coffea process code in a setup environment",
