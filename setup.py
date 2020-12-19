@@ -12,6 +12,7 @@ setup(
     name="sx_multi",
     version="0.0.1",
     packages=['sx_multi'],
+    install_requires=['aiostream', 'tenacity'],
     scripts=[],
     extras_require=extras_require
 )

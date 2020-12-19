@@ -1,21 +1,18 @@
-# Need some special fixed clients for this test
+# ServiceX access
 servicex==2.2b1
+servicex_clients
 
 # Get around a bug in windows (which is fixed in the windows source tree,
 # but will take until Jan to be released! Grrr! Damm their security tests!).
 numpy==1.19.3
 
-servicex_clients
+# Processing library with schema
 coffea
+
+# Notebook interactive items
 jupyterlab
+ipympl
+
+# Distributed processing libraries
 git+https://github.com/funcx-faas/funcX.git@async_interface#subdirectory=funcx_sdk
-
 dask[distributed]
-
-# Some helper libraries
-aiostream
-tenacity
-
-# For development help
-# pytest
-flake8
