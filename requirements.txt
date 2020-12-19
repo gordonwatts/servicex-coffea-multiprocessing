@@ -1,5 +1,5 @@
 # Need some special fixed clients for this test
-servicex==2.2a2
+servicex==2.2b1
 
 # Get around a bug in windows (which is fixed in the windows source tree,
 # but will take until Jan to be released! Grrr! Damm their security tests!).
