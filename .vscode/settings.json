@@ -10,6 +10,7 @@
         "funcx",
         "minio",
         "nanoevents",
+        "pytest",
         "qastle",
         "servicex",
         "xaod"
