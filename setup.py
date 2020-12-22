@@ -12,7 +12,7 @@ setup(
     name="sx_multi",
     version="0.0.1",
     packages=['sx_multi'],
-    install_requires=['aiostream', 'tenacity', 'servicex_clients'],
+    install_requires=['aiostream', 'tenacity', 'servicex==2.2b5', 'servicex_clients'],
     scripts=[],
     extras_require=extras_require
 )

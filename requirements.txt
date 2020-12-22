@@ -1,6 +1,3 @@
-# ServiceX access
-servicex==2.2b5
-
 # Get around a bug in windows (which is fixed in the windows source tree,
 # but will take until Jan to be released! Grrr! Damm their security tests!).
 numpy==1.19.3
