@@ -36,9 +36,9 @@ class DaskExecutor(Executor):
 
         Args:
             client_addr (Optional[str]): If `None` then create a local cluster that runs in-process.
-                                         Otherwise connect to an already existing cluster.  
+                                         Otherwise connect to an already existing cluster.
         '''
-        self.dask = Client(processes=False, threads_per_worker=10) if client_addr is None \
+        self.dask = Client(threads_per_worker=10, asynchronous=True) if client_addr is None \
             else Client(client_addr, asynchronous=True)
 
     def run_async_analysis(self, file_url, tree_name, accumulator, process_func):
