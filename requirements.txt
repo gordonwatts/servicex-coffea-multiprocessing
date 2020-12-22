@@ -2,9 +2,6 @@
 # but will take until Jan to be released! Grrr! Damm their security tests!).
 numpy==1.19.3
 
-# Processing library with schema
-coffea
-
 # Notebook interactive items
 jupyterlab
 
