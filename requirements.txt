@@ -1,5 +1,5 @@
 # ServiceX access
-servicex==2.2b1
+servicex==2.2b5
 servicex_clients
 
 # Get around a bug in windows (which is fixed in the windows source tree,

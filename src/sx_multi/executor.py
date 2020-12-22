@@ -26,12 +26,13 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from abc import ABC, abstractmethod
-from typing import Callable, AsyncGenerator
+from typing import Any, Callable, AsyncGenerator
 
 import aiostream
 import uproot4
 from sx_multi.accumulator import Accumulator
 from sx_multi.analysis import Analysis
+from servicex import StreamInfoUrl
 
 
 class Executor(ABC):
@@ -72,11 +73,13 @@ class Executor(ABC):
         output = analysis.accumulator.identity()
         async with finished_events.stream() as streamer:
             async for results in streamer:
-                print(results)
                 output.add(results)
                 yield output
 
-    async def launch_analysis_tasks_from_stream(self, result_file_stream: AsyncGenerator[dict, None], accumulator: Accumulator, process_func: Callable):
+    async def launch_analysis_tasks_from_stream(self,
+                                                result_file_stream: AsyncGenerator[StreamInfoUrl, None],
+                                                accumulator: Accumulator,
+                                                process_func: Callable) -> AsyncGenerator[Any, None]:
         """
         Invoke the implementation's task runner on each file from the serviceX stream.
         We don't know the file's tree name in advance, so grab a sample the first time
@@ -88,7 +91,7 @@ class Executor(ABC):
         """
         tree_name = None
         async for sx_data in result_file_stream:
-            file_url = sx_data['url']
+            file_url = sx_data.url
 
             # Determine the tree name if we've not gotten it already
             if tree_name is None:
@@ -121,7 +124,6 @@ class Executor(ABC):
         output = analysis.accumulator.identity()
         async with hist_stream.stream() as streamer:
             async for results in streamer:
-                print(results)
                 output.add(results)
                 yield output
 
@@ -139,7 +141,7 @@ def run_coffea_processor(events_url: str, tree_name: str,
     :param accumulator:
         Accumulator to store the results
     :param proc:
-        Analysis fuction to execute. Must have signature
+        Analysis function to execute. Must have signature
     :param explicit_func_pickle: bool
         Do we need to use dill to explicitly pickle the process function, or can we
         rely on the remote execution framework to handle it correctly?
@@ -151,7 +153,6 @@ def run_coffea_processor(events_url: str, tree_name: str,
     from coffea.nanoevents import NanoEventsFactory
     from sx_multi.schema import auto_schema
 
-
     # This in is amazingly important - the invar mass will fail silently without it.
     # And must be done in here as this function is shipped off to the funcx processor
     # on a remote machine/remote python environment.
@@ -159,7 +160,7 @@ def run_coffea_processor(events_url: str, tree_name: str,
     ak.behavior.update(candidate.behavior)
 
     # Use NanoEvents to build a 4-vector
-    events = NanoEventsFactory.from_file(
+    events = NanoEventsFactory.from_root(
         file=str(events_url),
         treepath=f'/{tree_name}',
         schemaclass=auto_schema,

@@ -25,13 +25,21 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from typing import Optional
 from dask.distributed import Client
 from sx_multi import run_coffea_processor, Executor
 
 
 class DaskExecutor(Executor):
-    def __init__(self, client_addr):
-        self.dask = Client(client_addr, asynchronous=True)
+    def __init__(self, client_addr: Optional[str] = None):
+        '''Create a Dask executor to process the analysis
+
+        Args:
+            client_addr (Optional[str]): If `None` then create a local cluster that runs in-process.
+                                         Otherwise connect to an already existing cluster.  
+        '''
+        self.dask = Client(processes=False, threads_per_worker=10) if client_addr is None \
+            else Client(client_addr, asynchronous=True)
 
     def run_async_analysis(self, file_url, tree_name, accumulator, process_func):
         data_result = self.dask.submit(run_coffea_processor,

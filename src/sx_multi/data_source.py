@@ -27,6 +27,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from typing import AsyncGenerator
+
+from servicex.servicex import StreamInfoUrl
+
+
 class DataSource:
     def __init__(self, query, metadata={}, datasets=[]):
         self.query = query
@@ -34,7 +39,15 @@ class DataSource:
         self.schema = None
         self.datasets = datasets
 
-    async def stream_result_file_urls(self):
+    async def stream_result_file_urls(self) -> AsyncGenerator[StreamInfoUrl, None]:
+        '''Launch all datasources at once
+
+        TODO: This is currently sync (that outter for loop does one datasource and then the next).
+        Need to move to a different paradigm. Perhaps using the `aiostream` library.
+
+        Yields:
+            [type]: [description]
+        '''
         for dataset in self.datasets:
-            async for file in dataset.get_data_rootfiles_minio_async(self.query.value()):
+            async for file in dataset.get_data_rootfiles_url_stream(self.query.value()):
                 yield file
